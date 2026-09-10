@@ -8,7 +8,7 @@ Auto Claim Play Points during computer idle time! 🙂‍↕️
 第一次手動檢查與領取後，會儲存下次可以領取的日期，    
 在該日期之後，趁電腦閒置時自動去領取，以此往復。
 
-<a href="https://github.com/peter890331/linkedin-games-solver"><img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=500&size=22&pause=1000&color=36BCF7&center=false&vCenter=false&width=500&lines=還在測試啦，測試一次要等一週耶！" alt="Typing SVG" /></a>
+<a href="https://github.com/peter890331/Play-Points-Auto-Claim"><img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=500&size=22&pause=1000&color=36BCF7&center=false&vCenter=false&width=500&lines=還在測試啦，測試一次要等一週耶！" alt="Typing SVG" /></a>
 
 首先在瀏覽器登入 Google Play。  
 下載 zip 檔後對其解壓縮，    
