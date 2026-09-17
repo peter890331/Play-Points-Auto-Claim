@@ -1,49 +1,64 @@
-let attempts = 0;
-let step = 1;
-let isSuccessfullyClaimed = false;
-
-const intervalId = setInterval(() => {
-  attempts++;
+chrome.storage.local.get(['nextClaimDate', 'autoRunFlag'], (initResult) => {
   
-  if (step === 1) {
-    const rewardCard = document.querySelector('div[jscontroller="KRZHBd"]');
-    let clicked = false;
+  if (initResult.nextClaimDate && Date.now() < initResult.nextClaimDate) {
     
-    if (rewardCard) {
-      const btn = rewardCard.querySelector('button');
-      const span = rewardCard.querySelector('span[jsname="V67aGc"]');
-      
-      if (btn) {
-        btn.removeAttribute('inert');
-        if (span) span.click();
-        btn.click();
-        clicked = true;
-        step = 2;
-        attempts = 0;
-      }
+    if (initResult.autoRunFlag) {
+      chrome.storage.local.remove('autoRunFlag', () => {
+        setTimeout(() => {
+          chrome.runtime.sendMessage({ action: 'closeTab' });
+        }, 500);
+      });
     }
-    
-    if (!clicked && attempts >= 15) {
-      step = 3;
-      attempts = 0;
-    }
-  } else if (step === 2) {
+    return;
+  }
+
+  let attempts = 0;
+  let hasClickedClaim = false;
+  let hasClickedChest = false;
+
+  const intervalId = setInterval(() => {
+    attempts++;
+
     const chestBtn = document.querySelector('button[jslog*="TE9ZQUxUWV9SRVdBUkRf"]');
-    let chestClicked = false;
-    
+    const rewardCard = document.querySelector('div[jscontroller="KRZHBd"]');
+    const nextRewardCard = document.querySelector('div[jscontroller="qtCXJb"]');
+
     if (chestBtn) {
-      chestBtn.click();
-      chestClicked = true;
-      isSuccessfullyClaimed = true;
-      step = 3;
-      attempts = 0;
+      if (!hasClickedChest) {
+        chestBtn.removeAttribute('inert');
+        chestBtn.click();
+        hasClickedChest = true;
+      }
+      return;
     }
-    
-    if (!chestClicked && attempts >= 15) {
-      step = 3;
-      attempts = 0;
+
+    if (rewardCard) {
+      if (!hasClickedClaim) {
+        const btn = rewardCard.querySelector('button');
+        const span = rewardCard.querySelector('span[jsname="V67aGc"]');
+        if (btn) {
+          btn.removeAttribute('inert');
+          if (span) span.click();
+          btn.click();
+          hasClickedClaim = true;
+        }
+      }
+      return;
     }
-  } else if (step === 3) {
+
+    if (nextRewardCard && !rewardCard && !chestBtn) {
+      let isSuccessfullyClaimed = hasClickedChest;
+      let isAlreadyClaimed = !hasClickedChest && !hasClickedClaim;
+      finishProcess(isSuccessfullyClaimed, isAlreadyClaimed);
+      return;
+    }
+
+    if (attempts >= 300) {
+      finishProcess(hasClickedChest, false);
+    }
+  }, 200);
+
+  function finishProcess(isSuccessfullyClaimed, isAlreadyClaimed) {
     clearInterval(intervalId);
     const isChinese = navigator.language.startsWith('zh');
     const noDataText = isChinese ? '尚未取得資料' : 'No data available';
@@ -54,7 +69,7 @@ const intervalId = setInterval(() => {
       let finalStr = result.dateString || noDataText;
       let shouldAutoClose = false;
       
-      if (result.autoRunFlag && (Date.now() - result.autoRunFlag < 15000)) {
+      if (result.autoRunFlag) {
         shouldAutoClose = true;
         chrome.storage.local.remove('autoRunFlag');
       }
@@ -73,6 +88,9 @@ const intervalId = setInterval(() => {
         count += 1;
         nextDate = nextFridayTime;
         finalStr = nextFridayString;
+      } else if (isAlreadyClaimed) {
+        nextDate = nextFridayTime;
+        finalStr = nextFridayString;
       } else {
         if (nextDate === 0) {
           nextDate = nextFridayTime;
@@ -82,7 +100,7 @@ const intervalId = setInterval(() => {
         }
       }
       
-      chrome.storage.local.set({ 
+      chrome.storage.local.set({
         nextClaimDate: nextDate, 
         claimCount: count,
         dateString: finalStr
@@ -95,4 +113,4 @@ const intervalId = setInterval(() => {
       });
     });
   }
-}, 200);
+});
