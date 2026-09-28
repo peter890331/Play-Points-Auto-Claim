@@ -19,16 +19,21 @@ chrome.storage.local.get(['nextClaimDate', 'autoRunFlag'], (initResult) => {
   const intervalId = setInterval(() => {
     attempts++;
 
+    // 絕對優先：超時檢查移到最上方，防止 return 造成的無限迴圈
+    if (attempts >= 300) {
+      // 既然超時代表卡住了，強制傳入 false 判定為失敗，讓它 6 小時後重試，不再假裝成功
+      finishProcess(false, false);
+      return;
+    }
+
     const chestBtn = document.querySelector('button[jslog*="TE9ZQUxUWV9SRVdBUkRf"]');
     const rewardCard = document.querySelector('div[jscontroller="KRZHBd"]');
     const nextRewardCard = document.querySelector('div[jscontroller="qtCXJb"]');
 
     if (chestBtn) {
-      if (!hasClickedChest) {
-        chestBtn.removeAttribute('inert');
-        chestBtn.click();
-        hasClickedChest = true;
-      }
+      chestBtn.removeAttribute('inert');
+      chestBtn.click();
+      hasClickedChest = true;
       return;
     }
 
@@ -51,10 +56,6 @@ chrome.storage.local.get(['nextClaimDate', 'autoRunFlag'], (initResult) => {
       let isAlreadyClaimed = !hasClickedChest && !hasClickedClaim;
       finishProcess(isSuccessfullyClaimed, isAlreadyClaimed);
       return;
-    }
-
-    if (attempts >= 300) {
-      finishProcess(hasClickedChest, false);
     }
   }, 200);
 

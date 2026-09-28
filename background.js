@@ -8,7 +8,7 @@ chrome.runtime.onInstalled.addListener((details) => {
 });
 
 chrome.idle.onStateChanged.addListener((newState) => {
-  if (newState === 'idle' && !isProcessing) {
+  if ((newState === 'idle' || newState === 'locked') && !isProcessing) {
     chrome.storage.local.get(['nextClaimDate'], (result) => {
       const nextDate = result.nextClaimDate || 0;
       if (Date.now() >= nextDate) {
@@ -16,7 +16,8 @@ chrome.idle.onStateChanged.addListener((newState) => {
         chrome.storage.local.set({ autoRunFlag: Date.now() }, () => {
           chrome.tabs.create({ url: "https://play.google.com/store/points/perks", active: false });
         });
-        setTimeout(() => { isProcessing = false; }, 60000);
+        
+        setTimeout(() => { isProcessing = false; }, 300000);
       }
     });
   }
