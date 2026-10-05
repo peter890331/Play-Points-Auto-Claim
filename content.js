@@ -1,7 +1,6 @@
 chrome.storage.local.get(['nextClaimDate', 'autoRunFlag'], (initResult) => {
   
   if (initResult.nextClaimDate && Date.now() < initResult.nextClaimDate) {
-    
     if (initResult.autoRunFlag) {
       chrome.storage.local.remove('autoRunFlag', () => {
         setTimeout(() => {
@@ -15,13 +14,12 @@ chrome.storage.local.get(['nextClaimDate', 'autoRunFlag'], (initResult) => {
   let attempts = 0;
   let hasClickedClaim = false;
   let hasClickedChest = false;
+  let chestWaitCycles = 0;
 
   const intervalId = setInterval(() => {
     attempts++;
 
-    // 絕對優先：超時檢查移到最上方，防止 return 造成的無限迴圈
     if (attempts >= 300) {
-      // 既然超時代表卡住了，強制傳入 false 判定為失敗，讓它 6 小時後重試，不再假裝成功
       finishProcess(false, false);
       return;
     }
@@ -34,6 +32,11 @@ chrome.storage.local.get(['nextClaimDate', 'autoRunFlag'], (initResult) => {
       chestBtn.removeAttribute('inert');
       chestBtn.click();
       hasClickedChest = true;
+      chestWaitCycles++;
+
+      if (chestWaitCycles >= 15) {
+        finishProcess(true, false);
+      }
       return;
     }
 
