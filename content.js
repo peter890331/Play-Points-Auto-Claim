@@ -11,15 +11,13 @@ chrome.storage.local.get(['nextClaimDate', 'autoRunFlag'], (initResult) => {
     return;
   }
 
-  let attempts = 0;
+  const startTime = Date.now();
   let hasClickedClaim = false;
   let hasClickedChest = false;
   let chestWaitCycles = 0;
 
   const intervalId = setInterval(() => {
-    attempts++;
-
-    if (attempts >= 300) {
+    if (Date.now() - startTime >= 60000) {
       finishProcess(false, false);
       return;
     }
