@@ -7,15 +7,21 @@ chrome.runtime.onInstalled.addListener((details) => {
   chrome.alarms.create('checkIdleAlarm', { periodInMinutes: 1 });
 });
 
+chrome.runtime.onStartup.addListener(() => {
+  chrome.alarms.create('checkIdleAlarm', { periodInMinutes: 1 });
+});
+
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'checkIdleAlarm') {
     chrome.idle.queryState(600, (state) => {
       if ((state === 'idle' || state === 'locked') && !isProcessing) {
         chrome.storage.local.get(['nextClaimDate'], (result) => {
           const nextDate = result.nextClaimDate || 0;
-          if (Date.now() >= nextDate) {
+          const now = Date.now();
+          
+          if (now >= nextDate) {
             isProcessing = true;
-            chrome.storage.local.set({ autoRunFlag: Date.now() }, () => {
+            chrome.storage.local.set({ autoRunFlag: now }, () => {
               chrome.tabs.create({ url: "https://play.google.com/store/points/perks", active: true });
             });
             setTimeout(() => { isProcessing = false; }, 300000);
